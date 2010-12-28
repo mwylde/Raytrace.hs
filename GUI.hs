@@ -11,7 +11,7 @@ white_color = Color 1 1 1
 light_grey_color = Color 0.6 0.6 0.6
 
 surfaces :: [Surface]
-surfaces = [makeSphere (Point3 6 6 1.76) 0.75 material] where
+surfaces = [makeSphere (Point3 6 6 1.76) 5 material] where
   material = Material red_color red_color light_grey_color 100 (-1) 4
 
 cameraFrame :: CameraFrame
