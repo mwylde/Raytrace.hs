@@ -73,8 +73,8 @@ colorForHit (Just hit_rec) depth = diffuse where
 renderWindow :: Window -> CameraFrame -> ViewPlane -> [Surface] -> IO (GLUT.PixelData Float)
 renderWindow (Window w h) cf vp surfaces = 
   liftM (GLUT.PixelData GLUT.RGB GLUT.Float) $ 
-  newArray (foldl appendPixel [] [(i, j) | i <- [0..(w-1)], j <- [0..(h-1)]]) where
-               appendPixel acc (i,j) = let ray = rayThroughPixel i j (Window w h) cf vp
+  newArray (foldl appendPixel [] [(i, j) | i <- [0..(h-1)], j <- [0..(w-1)]]) where
+               appendPixel acc (i,j) = let ray = rayThroughPixel j i (Window w h) cf vp
                                            (Color r g b) = rayTrace ray (1.0005, 99999999) surfaces 5
                                            in r:g:b:acc
 
