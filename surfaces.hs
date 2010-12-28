@@ -1,24 +1,26 @@
-import Geometry
-
 module Surfaces
        ( HitRecord (..),
+         Material (..),
+         HitRange,
          BBox (..),
-         Surface) where
+         Surface (..)) where
 
-data HitRecord a = HitRecord (Surface a) => {surface :: a, hit_time :: Float, 
-                                           hit_pt :: Point3, hit_normal :: Vector3}
+import Geometry
 
-data BBox {bbleft :: Float, bbright :: Float, 
-           bbbottom :: Float, bbtop :: Float, 
-           bbnear :: Float, bbfar :: Float} deriving (Show, Eq)
+data HitRecord = HitRecord  {hit_material :: Material, hit_time :: Float, 
+                               hit_pt :: Point3, hit_normal :: Vector3} deriving (Show, Eq)
 
-class Surface a where
-  -- Hit function, which reports whether the surface was hit within the given range by the given ray   
-  hit :: a -> Ray3 -> Range -> Maybe HitRecord
-  bbox :: a -> BBox
-  diffuse :: a -> Color
-  specular :: a -> Color
-  reflective :: a -> Color
-  phong_exp :: a -> Float
-  refr_index :: a -> Float
-  atten :: a -> Float
+data Material = Material { diffuse :: Color, specular :: Color, reflective :: Color,
+                           phong_exp :: Float, refr_index :: Float, atten :: Float} deriving (Show, Eq)
+
+data BBox = BBox {bbleft :: Float, bbright :: Float, 
+                  bbbottom :: Float, bbtop :: Float, 
+                  bbnear :: Float, bbfar :: Float} deriving (Show, Eq)
+
+type HitRange = (Float, Float)
+
+data Surface = Surface {hit :: Ray3 -> HitRange -> Maybe (HitRecord),
+                        bbox :: BBox,
+                        material :: Material,
+                        leftChild :: Maybe Surface,
+                        rightChild :: Maybe Surface}

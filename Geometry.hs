@@ -10,6 +10,7 @@ module Geometry
         normalize,
         Point3 (..),
         vectorFrom,
+        pvAdd,
         Ray3 (..),
         Color (..)) where
 
@@ -54,6 +55,9 @@ data Point3 = Point3 {pX :: Float, pY :: Float, pZ :: Float} deriving (Show, Eq)
 
 vectorFrom :: Point3 -> Point3 -> Vector3
 vectorFrom (Point3 x1 y1 z1) (Point3 x2 y2 z2) = Vector3 (x2-x1) (y2-y1) (z2-z1)
+
+pvAdd :: Point3 -> Vector3 -> Point3
+pvAdd (Point3 px py pz) (Vector3 vx vy vz) = Point3 (vx+px) (vy+py) (vz+pz)
 
 -- Ray stuff
 data Ray3 = Ray3 {origin :: Point3, dir :: Vector3} deriving (Show, Eq)
