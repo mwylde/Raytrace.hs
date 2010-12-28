@@ -14,8 +14,8 @@ makeSphere (Point3 x y z) r material = Surface hit bbox material Nothing Nothing
       else
         let hit_p = pvAdd e (vmap (*hit_t) d)
             hit_n = normalize $ vectorFrom center hit_p 
-        in trace "Got a value" (Just $ HitRecord material hit_t hit_p hit_n)
-    else trace ((show e) ++ ", " ++ (show d)) Nothing
+        in Just $ HitRecord material hit_t hit_p hit_n
+    else Nothing
     where
       center = (Point3 x y z)
       ctr_to_e = (vectorFrom center e)

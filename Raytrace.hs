@@ -4,6 +4,7 @@ module Raytrace
         Window (..),
         Image,
         cameraFromLookat,
+        rayThroughPixel,
         renderWindow) where
 
 import Control.Monad
@@ -26,13 +27,13 @@ type Image = GLUT.PixelData Float
 -- Returns the ray the starts at the eye point and travels through the given pixel
 -- in the view plane
 rayThroughPixel :: Float -> Float -> Window -> CameraFrame -> ViewPlane -> Ray3
-rayThroughPixel x y (Window w h) (CameraFrame cam c_u c_v c_w) (ViewPlane vp_dist vp_width vp_height) =
+rayThroughPixel x y (Window ww wh) (CameraFrame cam c_u c_v c_w) (ViewPlane vp_dist vp_width vp_height) =
   Ray3 cam (Vector3 dir_x dir_y dir_z) where
     left = -vp_width/2.0
     bottom = -vp_height/2.0
     
-    u = (left + (x+0.5) / w) * vp_width
-    v = (bottom + (y+0.5) / h) * vp_height
+    u = left + ((x+0.5) / ww) * vp_width
+    v = bottom + ((y+0.5) / wh) * vp_height
     w = -vp_dist
     
     dir_x = u*(vX c_u) + v*(vX c_v) + w*(vX c_w)
@@ -43,9 +44,9 @@ rayThroughPixel x y (Window w h) (CameraFrame cam c_u c_v c_w) (ViewPlane vp_dis
 -- look-at point, and up direction
 cameraFromLookat :: Point3 -> Point3 -> Vector3 -> CameraFrame
 cameraFromLookat cam look_at up = CameraFrame cam c_u c_v c_w where
-  c_u = normalize $ vectorFrom look_at cam
-  c_v = normalize $ cross up c_u
-  c_w = cross c_u c_v
+  c_w = normalize $ vectorFrom look_at cam
+  c_u = normalize $ cross up c_w
+  c_v = cross c_w c_u
 
 -- Calculates the color for the given ray in the given time range and recursion depth
 rayTrace :: Ray3 -> HitRange -> [Surface] -> Int -> Color
