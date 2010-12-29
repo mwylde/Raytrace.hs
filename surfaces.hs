@@ -2,6 +2,7 @@ module Surfaces
        ( HitRecord (..),
          Material (..),
          HitRange,
+         full_range,
          Vertex,
          BBox (..),
          Surface (..)) where
@@ -19,6 +20,8 @@ data BBox = BBox {bbleft :: Float, bbright :: Float,
                   bbnear :: Float, bbfar :: Float} deriving (Show, Eq)
 
 type HitRange = (Float, Float)
+full_range :: HitRange
+full_range = (1.0005, 99999999999)
 
 type Vertex = (Point3, Point3, Point3)
 

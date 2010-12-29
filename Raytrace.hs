@@ -76,7 +76,9 @@ closestHit ray hit_range (x:xs) = if (isJust hit_rec) then hit_rec else next_rec
 colorForHit :: Scene -> Ray3 -> Maybe HitRecord -> Int -> Color
 colorForHit _ _ Nothing depth = Color 0 0 0
 colorForHit (Scene surfaces lights) ray (Just hit_rec) depth = 
-  calculateLighting lights ray hit_rec depth
+  lighting + reflection * (reflective $ hit_material hit_rec) where
+    reflection = specularReflections (Scene surfaces lights) ray hit_rec depth
+    lighting = calculateLighting lights ray hit_rec depth
 
 calculateLighting :: [Light] -> Ray3 -> HitRecord -> Int -> Color
 calculateLighting lights ray hit_rec depth = foldl doLight (Color 0 0 0) lights where
@@ -84,11 +86,13 @@ calculateLighting lights ray hit_rec depth = foldl doLight (Color 0 0 0) lights 
   doLight acc (Light pos col) = let lightDir = normalize $ vectorFrom (hit_pt hit_rec) pos
                                 in foldl (\acc2 s -> acc2 + s lightDir col hit_rec) acc shades
 
+-- Lambertian calculates diffuse shading
 lambertianShading :: Vector3 -> Color -> HitRecord -> Color
 lambertianShading l_dir l_col (HitRecord material _ _ norm) = cmap (*scale) (l_col * diff) where
   scale = max 0 (dot l_dir norm)
   diff = diffuse material
 
+-- Blinn phong calculates specular highlights
 blinnPhongShading :: Ray3 -> Vector3 -> Color -> HitRecord -> Color
 blinnPhongShading (Ray3 _ rayDir) l_dir l_col (HitRecord material _ _ norm) = 
   cmap (*scale) (l_col * spec)  where
@@ -96,6 +100,13 @@ blinnPhongShading (Ray3 _ rayDir) l_dir l_col (HitRecord material _ _ norm) =
     view = normalize $ vmap (*(-1)) rayDir
     halfV = normalize $ view + l_dir
     scale = (max 0 (dot halfV norm)) ** (phong_exp material)
+    
+-- Specular reflections
+specularReflections :: Scene -> Ray3 -> HitRecord -> Int -> Color
+specularReflections scene (Ray3 _ dir) (HitRecord _ _ pt norm) depth = 
+  rayTrace refl_ray full_range scene (depth-1) where
+    refl_dir = dir - (vmap (*(2*(dot dir norm))) norm)
+    refl_ray = Ray3 pt refl_dir
 
 -- Calculates the colors of everything in the pixel grid, to be drawn to the screen
 renderWindow :: Window -> CameraFrame -> ViewPlane -> Scene -> IO (GLUT.PixelData Float)
@@ -103,6 +114,6 @@ renderWindow (Window w h) cf vp scene =
   liftM (GLUT.PixelData GLUT.RGB GLUT.Float) $ 
   newArray (foldr appendPixel [] [(i, j) | i <- [0..(h-1)], j <- [0..(w-1)]]) where
                appendPixel (i,j) acc = let ray = rayThroughPixel j i (Window w h) cf vp
-                                           (Color r g b) = rayTrace ray (1.0005, 99999999) scene 5
+                                           (Color r g b) = rayTrace ray full_range scene 5
                                            in r:g:b:acc
 
