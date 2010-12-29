@@ -9,6 +9,10 @@ module Geometry
         cross,
         normalize,
         Point3 (..),
+        pmap,
+        pzip,
+        pfold,
+        distance,
         vectorFrom,
         pvAdd,
         Ray3 (..),
@@ -55,11 +59,31 @@ normalize v = vmap (/ mag v) v
 -- Point stuff
 data Point3 = Point3 {pX :: Float, pY :: Float, pZ :: Float} deriving (Show, Eq)
 
+instance Num Point3 where
+  (+) = pzip (+)
+  (-) = pzip (-)
+  (*) = pzip (*)
+  abs = pmap abs
+  signum = pmap signum
+  fromInteger x = Point3 x' x' x' where x' = fromInteger x :: Float
+
+pmap :: (Float -> Float) -> Point3 -> Point3
+pmap f (Point3 x y z) = Point3 (f x) (f y) (f z)
+
+pzip :: (Float -> Float -> Float) -> Point3 -> Point3 -> Point3
+pzip f (Point3 x1 y1 z1) (Point3 x2 y2 z2) = Point3 (f x1 x2) (f y1 y2) (f z1 z2)
+
+pfold :: (Float -> Float -> Float) -> Point3 -> Float
+pfold f (Point3 x y z) = f x (f y z)  
+
 vectorFrom :: Point3 -> Point3 -> Vector3
 vectorFrom (Point3 x1 y1 z1) (Point3 x2 y2 z2) = Vector3 (x2-x1) (y2-y1) (z2-z1)
 
 pvAdd :: Point3 -> Vector3 -> Point3
 pvAdd (Point3 px py pz) (Vector3 vx vy vz) = Point3 (vx+px) (vy+py) (vz+pz)
+
+distance :: Point3 -> Point3 -> Float
+distance p1 p2 = sqrt $ pfold (+) (pmap (^2) (p1-p2))
 
 -- Ray stuff
 data Ray3 = Ray3 {origin :: Point3, dir :: Vector3} deriving (Show, Eq)
@@ -76,7 +100,7 @@ instance Num Color where
   fromInteger x = Color x' x' x' where x' = fromInteger x :: Float
 
 cmap :: (Float -> Float) -> Color -> Color
-cmap f (Color x y z) = Color (f x) (f y) (f z)
+cmap f (Color r g b) = Color (f r) (f g) (f b)
 
 czip :: (Float -> Float -> Float) -> Color -> Color -> Color
-czip f (Color x1 y1 z1) (Color x2 y2 z2) = Color (f x1 x2) (f y1 y2) (f z1 z2)
+czip f (Color r1 g1 b1) (Color r2 g2 b2) = Color (f r1 r2) (f g1 g2) (f b1 b2)

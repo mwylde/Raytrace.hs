@@ -75,16 +75,19 @@ closestHit ray hit_range (x:xs) = if (isJust hit_rec) then hit_rec else next_rec
 -- Calculates the color for the specified hit record, taking into account recursion depth
 colorForHit :: Scene -> Ray3 -> Maybe HitRecord -> Int -> Color
 colorForHit _ _ Nothing depth = Color 0 0 0
-colorForHit (Scene surfaces lights) ray (Just hit_rec) depth = 
+colorForHit scene ray (Just hit_rec) depth = 
   lighting + reflection * (reflective $ hit_material hit_rec) where
-    reflection = specularReflections (Scene surfaces lights) ray hit_rec depth
-    lighting = calculateLighting lights ray hit_rec depth
+    reflection = specularReflections scene ray hit_rec depth
+    lighting = calculateLighting scene ray hit_rec depth
 
-calculateLighting :: [Light] -> Ray3 -> HitRecord -> Int -> Color
-calculateLighting lights ray hit_rec depth = foldl doLight (Color 0 0 0) lights where
+calculateLighting :: Scene -> Ray3 -> HitRecord -> Int -> Color
+calculateLighting (Scene surfaces lights) ray hit_rec depth = foldl doLight (Color 0 0 0) lights where
   shades = [lambertianShading, blinnPhongShading ray]
   doLight acc (Light pos col) = let lightDir = normalize $ vectorFrom (hit_pt hit_rec) pos
-                                in foldl (\acc2 s -> acc2 + s lightDir col hit_rec) acc shades
+                                    lightDist = distance (hit_pt hit_rec) pos
+                                    inShadow = isShadowed (Ray3 pos lightDir) lightDist surfaces
+                                in if inShadow then acc
+                                   else foldl (\acc2 s -> acc2 + s lightDir col hit_rec) acc shades
 
 -- Lambertian calculates diffuse shading
 lambertianShading :: Vector3 -> Color -> HitRecord -> Color
@@ -101,11 +104,19 @@ blinnPhongShading (Ray3 _ rayDir) l_dir l_col (HitRecord material _ _ norm) =
     halfV = normalize $ view + l_dir
     scale = (max 0 (dot halfV norm)) ** (phong_exp material)
     
+-- Calculates whether or not something is in shadow
+isShadowed :: Ray3 -> Float -> [Surface] -> Bool
+isShadowed _ _ [] = False
+isShadowed light_ray light_dist (x:xs) = 
+  if isJust $ (hit x) light_ray (fst full_range, light_dist) then True
+  else isShadowed light_ray light_dist xs
+    
 -- Specular reflections
 specularReflections :: Scene -> Ray3 -> HitRecord -> Int -> Color
 specularReflections scene (Ray3 _ dir) (HitRecord _ _ pt norm) depth = 
   rayTrace refl_ray full_range scene (depth-1) where
-    refl_dir = dir - (vmap (*(2*(dot dir norm))) norm)
+    multiplier = 2*(dot dir norm)
+    refl_dir = dir - (vmap (*multiplier) norm)
     refl_ray = Ray3 pt refl_dir
 
 -- Calculates the colors of everything in the pixel grid, to be drawn to the screen
