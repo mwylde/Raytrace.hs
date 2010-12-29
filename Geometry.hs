@@ -12,7 +12,9 @@ module Geometry
         vectorFrom,
         pvAdd,
         Ray3 (..),
-        Color (..)) where
+        Color (..),
+        czip,
+        cmap) where
 
 data Vector3 = Vector3 {vX :: Float, vY :: Float, vZ :: Float} deriving (Show, Eq)
 
@@ -64,3 +66,17 @@ data Ray3 = Ray3 {origin :: Point3, dir :: Vector3} deriving (Show, Eq)
 
 -- Colors (TODO: Find a better place for this code)
 data Color = Color {red :: Float, green :: Float, blue :: Float} deriving (Show, Eq)
+
+instance Num Color where
+  (+) = czip (+)
+  (-) = czip (-)
+  (*) = czip (*)
+  abs = cmap abs
+  signum = cmap signum
+  fromInteger x = Color x' x' x' where x' = fromInteger x :: Float
+
+cmap :: (Float -> Float) -> Color -> Color
+cmap f (Color x y z) = Color (f x) (f y) (f z)
+
+czip :: (Float -> Float -> Float) -> Color -> Color -> Color
+czip f (Color x1 y1 z1) (Color x2 y2 z2) = Color (f x1 x2) (f y1 y2) (f z1 z2)

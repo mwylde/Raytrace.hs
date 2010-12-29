@@ -2,13 +2,14 @@ module Surfaces
        ( HitRecord (..),
          Material (..),
          HitRange,
+         Vertex,
          BBox (..),
          Surface (..)) where
 
 import Geometry
 
 data HitRecord = HitRecord  {hit_material :: Material, hit_time :: Float, 
-                               hit_pt :: Point3, hit_normal :: Vector3} deriving (Show, Eq)
+                             hit_pt :: Point3, hit_normal :: Vector3} deriving (Show, Eq)
 
 data Material = Material { diffuse :: Color, specular :: Color, reflective :: Color,
                            phong_exp :: Float, refr_index :: Float, atten :: Float} deriving (Show, Eq)
@@ -18,6 +19,8 @@ data BBox = BBox {bbleft :: Float, bbright :: Float,
                   bbnear :: Float, bbfar :: Float} deriving (Show, Eq)
 
 type HitRange = (Float, Float)
+
+type Vertex = (Point3, Point3, Point3)
 
 data Surface = Surface {hit :: Ray3 -> HitRange -> Maybe (HitRecord),
                         bbox :: BBox,
