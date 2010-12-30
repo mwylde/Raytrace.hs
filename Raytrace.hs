@@ -83,9 +83,10 @@ colorForHit scene ray (Just hit_rec) depth =
 calculateLighting :: Scene -> Ray3 -> HitRecord -> Int -> Color
 calculateLighting (Scene surfaces lights) ray hit_rec depth = foldl doLight (Color 0 0 0) lights where
   shades = [lambertianShading, blinnPhongShading ray]
-  doLight acc (Light pos col) = let lightDir = normalize $ vectorFrom (hit_pt hit_rec) pos
-                                    lightDist = distance (hit_pt hit_rec) pos
-                                    inShadow = isShadowed (Ray3 pos lightDir) lightDist surfaces
+  doLight acc (Light pos col) = let hit_point = (hit_pt hit_rec)
+                                    lightDir = normalize $ vectorFrom hit_point pos
+                                    lightDist = distance hit_point pos
+                                    inShadow = isShadowed (Ray3 hit_point lightDir) lightDist surfaces
                                 in if inShadow then acc
                                    else foldl (\acc2 s -> acc2 + s lightDir col hit_rec) acc shades
 
@@ -108,7 +109,7 @@ blinnPhongShading (Ray3 _ rayDir) l_dir l_col (HitRecord material _ _ norm) =
 isShadowed :: Ray3 -> Float -> [Surface] -> Bool
 isShadowed _ _ [] = False
 isShadowed light_ray light_dist (x:xs) = 
-  if isJust $ (hit x) light_ray (fst full_range, light_dist) then True
+  if isJust $ (hit x) light_ray (0.05, light_dist) then True
   else isShadowed light_ray light_dist xs
     
 -- Specular reflections
