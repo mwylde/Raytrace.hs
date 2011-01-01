@@ -109,7 +109,7 @@ blinnPhongShading (Ray3 _ rayDir) l_dir l_col (HitRecord material _ _ norm) =
 isShadowed :: Ray3 -> Float -> [Surface] -> Bool
 isShadowed _ _ [] = False
 isShadowed light_ray light_dist (x:xs) = 
-  if isJust $ (hit x) light_ray (0.05, light_dist) then True
+  if isJust $ (hit x) light_ray (0.001, light_dist) then True
   else isShadowed light_ray light_dist xs
     
 -- Specular reflections

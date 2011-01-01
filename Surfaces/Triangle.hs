@@ -12,10 +12,10 @@ makeTriangle (Point3 ax ay az) (Point3 bx by bz) (Point3 cx cy cz) material =
       if hit_t < t0 || hit_t > t1 then Nothing
       else
         let beta = (j*(e*i-h*f) + k*(g*f-d*i) + l*(d*h-e*g))/mm in
-        if beta < 0 || beta > 1 then Nothing
+        if (beta < 0 || beta > 1) then Nothing
         else
           let gamma = (i*(a*k-j*b) + h*(j*c-a*l) + g*(b*l-k*c))/mm in
-          if gamma > 0 || (beta+gamma) > 1 then Nothing
+          if (gamma < 0 || (beta+gamma) > 1) then Nothing
           else 
             let pA = (Point3 ax ay az) 
                 a_to_b = vectorFrom pA (Point3 bx by bz)
@@ -25,7 +25,7 @@ makeTriangle (Point3 ax ay az) (Point3 bx by bz) (Point3 cx cy cz) material =
                 point' = (pvAdd point (vmap (*gamma) a_to_c)) in
             Just $ HitRecord material hit_t point' norm
       where
-        -- Using the notation of Shirely & Marschner, Section 4.4.5
+        -- Using the notation of Shirely & Marschner, Section 4.4.2
         -- basically, using Cramer's rule to solve a system of linear equations
         a = ax-bx
         b = ay-by
