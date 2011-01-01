@@ -7,8 +7,11 @@ import Surfaces
 makeTriangle :: Point3 -> Point3 -> Point3 -> Material -> Surface
 makeTriangle (Point3 ax ay az) (Point3 bx by bz) (Point3 cx cy cz) material =
   Surface hit bbox material Nothing Nothing where
-    bbox = BBox 0 0 0 0 0 0
-    hit (Ray3 base dir) (t0, t1) =
+    xs = [ax, bx, cx]
+    ys = [ay, by, cy]
+    zs = [az, bz, cz]
+    bbox = BBox (minimum xs) (maximum xs) (minimum ys) (maximum ys) (minimum zs) (maximum zs)
+    hitTri (Ray3 base dir) (t0, t1) =
       if hit_t < t0 || hit_t > t1 then Nothing
       else
         let beta = (j*(e*i-h*f) + k*(g*f-d*i) + l*(d*h-e*g))/mm in
@@ -42,3 +45,6 @@ makeTriangle (Point3 ax ay az) (Point3 bx by bz) (Point3 cx cy cz) material =
         
         mm = a*(e*i - h*f) + b*(g*f-d*i) + c*(d*h-e*g)
         hit_t = (f*(a*k-j*b) + e*(j*c-a*l) + d*(b*l-k*c))/(-mm)
+    
+    hit ray hit_range = 
+      if hit_bbox ray hit_range bbox then hitTri ray hit_range else Nothing

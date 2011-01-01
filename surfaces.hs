@@ -3,8 +3,8 @@ module Surfaces
          Material (..),
          HitRange,
          full_range,
-         Vertex,
          BBox (..),
+         hit_bbox,
          Surface (..)) where
 
 import Geometry
@@ -19,11 +19,23 @@ data BBox = BBox {bbleft :: Float, bbright :: Float,
                   bbbottom :: Float, bbtop :: Float, 
                   bbnear :: Float, bbfar :: Float} deriving (Show, Eq)
 
+hit_bbox :: Ray3 -> HitRange -> BBox -> Bool
+hit_bbox (Ray3 base dir) (t0, t1) (BBox left right bottom top near far) = and predicates where
+  --intersection time with the given axis (A) cutting plane
+  intersectsAt dirA baseA dimS dimL = (tAmin, tAmax) where
+    aA = 1/(dirA dir)
+    tAmin = ((if aA > 0 then dimS else dimL) - (baseA base)) * aA
+    tAmax = ((if aA > 0 then dimL else dimS) - (baseA base)) * aA
+   
+  (mins, maxs) = unzip [intersectsAt vX pX left right, intersectsAt vY pY bottom top,
+                        intersectsAt vZ pZ near far]
+  
+  predicates = [mi <= ma | mi <- mins, ma <- maxs]
+
 type HitRange = (Float, Float)
 full_range :: HitRange
 full_range = (1.0005, 99999999999)
 
-type Vertex = (Point3, Point3, Point3)
 
 data Surface = Surface {hit :: Ray3 -> HitRange -> Maybe (HitRecord),
                         bbox :: BBox,
