@@ -6,7 +6,7 @@ import Surfaces
 
 makeTriangle :: Point3 -> Point3 -> Point3 -> Material -> Surface
 makeTriangle (Point3 ax ay az) (Point3 bx by bz) (Point3 cx cy cz) material =
-  Surface hit bbox material Nothing Nothing where
+  Surface hit bbox Nothing Nothing where
     xs = [ax, bx, cx]
     ys = [ay, by, cy]
     zs = [az, bz, cz]
@@ -47,4 +47,4 @@ makeTriangle (Point3 ax ay az) (Point3 bx by bz) (Point3 cx cy cz) material =
         hit_t = (f*(a*k-j*b) + e*(j*c-a*l) + d*(b*l-k*c))/(-mm)
     
     hit ray hit_range = 
-      if hit_bbox ray hit_range bbox then hitTri ray hit_range else Nothing
+      if hitBBox ray hit_range bbox then hitTri ray hit_range else Nothing

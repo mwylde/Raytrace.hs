@@ -6,7 +6,7 @@ import Surfaces
 import Debug.Trace
 
 makeSphere :: Point3 -> Float -> Material -> Surface
-makeSphere (Point3 x y z) r material = Surface hit bbox material Nothing Nothing where
+makeSphere (Point3 x y z) r material = Surface hit bbox Nothing Nothing where
   bbox = BBox (x-r) (x+r) (y-r) (y+r) (z-r) (z+r)
   hit (Ray3 e d) (t0, t1) = 
     if discriminant >= 0 then

@@ -5,7 +5,7 @@ import Geometry
 import Surfaces
 
 makePlane :: Point3 -> Point3 -> Point3 -> Material -> Surface
-makePlane a b c material = Surface hit bbox material Nothing Nothing where
+makePlane a b c material = Surface hit bbox  Nothing Nothing where
   bbox = BBox 0 0 0 0 0 0
   hit (Ray3 base dir) (t0, t1) =
     if hit_t < t0 || hit_t > t1 then Nothing
