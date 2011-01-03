@@ -80,8 +80,8 @@ plane = makePlane (Point3 0 0 (-1)) (Point3 1 0 (-1)) (Point3 1 1 (-1)) plane_ma
   plane_material = Material light_grey_color white_color black_color 10 (-1) 4
   
 surfaces :: [Surface]
-surfaces = [plane, (constructBBT (dannersMethod++purple_spheres++spheres))]
---surfaces = plane:(dannersMethod++purple_spheres++spheres)
+--surfaces = [plane, (constructBBT (dannersMethod++purple_spheres++spheres))]
+surfaces = plane:(dannersMethod++purple_spheres++spheres)
 
 lights :: [Light]
 lights = [Light (Point3 50 2 100) (Color 1 1 1),
