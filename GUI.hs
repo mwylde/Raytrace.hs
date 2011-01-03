@@ -6,6 +6,8 @@ import Surfaces.Triangle
 import Raytrace
 import Graphics.Rendering.OpenGL hiding (Color, Vector3, Light)
 import Graphics.UI.GLUT hiding (Color, Vector3, Light, Cube)
+import System.CPUTime
+import Text.Printf
 
 red_color = Color 1 0 0
 green_color = Color 0 1 0
@@ -78,9 +80,8 @@ plane = makePlane (Point3 0 0 (-1)) (Point3 1 0 (-1)) (Point3 1 1 (-1)) plane_ma
   plane_material = Material light_grey_color white_color black_color 10 (-1) 4
   
 surfaces :: [Surface]
-surfaces = plane:dannersMethod++purple_spheres where
-  mat1 = Material greenish_color white_color light_grey_color 100 (-1) 3
-  triangle = makeTriangle (Point3 0 0 1) (Point3 0 0 (-1))  (Point3 0 8 (-1)) mat1
+surfaces = [plane, (constructBBT (dannersMethod++purple_spheres++spheres))]
+--surfaces = plane:(dannersMethod++purple_spheres++spheres)
 
 lights :: [Light]
 lights = [Light (Point3 50 2 100) (Color 1 1 1),
@@ -92,15 +93,22 @@ cameraFrame = cameraFromLookat (Point3 4 (-4) 4) (Point3 4 4 1) (Vector3 0 0 1)
 viewPlane :: ViewPlane
 viewPlane = ViewPlane 4 8 6
 
+time a = do
+  start <- getCPUTime
+  v <- a
+  end <- getCPUTime
+  let diff = (fromInteger (end-start)) / (10^12)
+  printf "Rendering took %0.3f seconds\n" (diff :: Double)
+  return v
+
 main = do
   (progname, _) <- getArgsAndInitialize
   initialDisplayMode $= [DoubleBuffered]
   initialWindowSize $= Size 800 600
   createWindow "Raytrace.hs"
   
-  pixbuf <- renderWindow (Window 800 600) cameraFrame viewPlane (Scene surfaces lights)
-  
-  putStrLn "Finished Rendering"
+  putStrLn "Started rendering"
+  pixbuf <- time $ renderWindow (Window 800 600) cameraFrame viewPlane (Scene surfaces lights)
   
   displayCallback $= display pixbuf
   idleCallback $= Nothing

@@ -6,11 +6,14 @@ module Surfaces
          BBox (..),
          hitBBox,
          combineBBoxes,
+         constructBBT,
          Surface (..)) where
 
 import Data.Maybe
 import Data.List
 import Geometry
+import Debug.Trace
+import System.Random
 
 data HitRecord = HitRecord  {hit_material :: Material, hit_time :: Float, 
                              hit_pt :: Point3, hit_normal :: Vector3} deriving (Show, Eq)
@@ -59,7 +62,38 @@ makeBBoxNode left right = Surface this_hit this_bbox left right where
       else Just $ minimumBy (\x y -> (hit_time x) `compare` (hit_time y)) hits
     else Nothing
 
---constructBBT :: [Surface] -> Surface
+
+data Axis = XAxis | YAxis | ZAxis deriving (Enum, Eq, Show)
+
+constructBBT :: [Surface] -> Surface
+constructBBT = constructBBTRec 0
+
+constructBBTRec :: Int -> [Surface] -> Surface
+constructBBTRec _ [] = error "No surfaces in list"
+constructBBTRec _ (x:[]) = makeBBoxNode (Just x) Nothing
+constructBBTRec _ (x:y:[]) = makeBBoxNode (Just x) (Just y)
+constructBBTRec axis surfaces = trace ((show $ length lefts) ++ ", " ++ (show $ length rights)) (makeBBoxNode left right) where
+  partitionByBestAxis :: [Surface] -> ([Surface], [Surface])
+  partitionByBestAxis xs = minimumBy (\x y -> compare (lenDiff x) (lenDiff y)) possibilities where
+    possibilities = map (partitionByAxis xs) [XAxis .. ZAxis]
+    lenDiff (f,s) = abs $ length f - length s
+  
+  (lefts, rights) = partitionByBestAxis surfaces
+
+  (lefts', rights') = if (length lefts) > 0 && (length rights) > 0 then (lefts, rights)
+                      else splitAt ((length surfaces) `div` 2) surfaces
+
+  next_axis = (axis+1) `mod` 3
+  left = Just $ constructBBTRec next_axis lefts'
+  right = Just $ constructBBTRec next_axis rights'
+
+partitionByAxis :: [Surface] -> Axis -> ([Surface], [Surface])
+partitionByAxis surfaces axis = partition (\x -> midpoint x <= midpoints_avg) surfaces where
+  (s, l) = case axis of XAxis -> (bbleft, bbright)
+                        YAxis -> (bbbottom, bbtop)
+                        ZAxis -> (bbnear, bbfar)
+  midpoint (Surface _ x _ _) = ((s x) + (l x)) / 2
+  midpoints_avg = (foldl (\acc x -> acc + midpoint x) 0 surfaces) / (genericLength surfaces)
 
 
 type HitRange = (Float, Float)
