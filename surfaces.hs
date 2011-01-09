@@ -1,6 +1,7 @@
 module Surfaces
        ( HitRecord (..),
          Material (..),
+         makeOpaqueMat,
          HitRange,
          full_range,
          BBox (..),
@@ -18,8 +19,12 @@ import System.Random
 data HitRecord = HitRecord  {hit_material :: Material, hit_time :: Float, 
                              hit_pt :: Point3, hit_normal :: Vector3} deriving (Show, Eq)
 
-data Material = Material { diffuse :: Color, specular :: Color, reflective :: Color,
-                           phong_exp :: Float, refr_index :: Float, atten :: Float} deriving (Show, Eq)
+data Material = Material { diffuse :: Color, specular :: Color,
+                           reflective :: Color, phong_exp :: Float, 
+                           refr_index :: Maybe Float, atten :: Color} deriving (Show, Eq)
+                                                                               
+makeOpaqueMat :: Color -> Color -> Color -> Float -> Material
+makeOpaqueMat diff spec refl phong = Material diff spec refl phong Nothing (Color 0 0 0)
 
 data BBox = BBox {bbleft :: Float, bbright :: Float, 
                   bbbottom :: Float, bbtop :: Float, 

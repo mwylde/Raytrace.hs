@@ -76,8 +76,11 @@ closestHit ray hit_range (x:xs) = if (isJust hit_rec) then hit_rec else next_rec
 colorForHit :: Scene -> Ray3 -> Maybe HitRecord -> Int -> Color
 colorForHit _ _ Nothing depth = Color 0 0 0
 colorForHit scene ray (Just hit_rec) depth = 
-  lighting + reflection * (reflective $ hit_material hit_rec) where
-    reflection = specularReflections scene ray hit_rec depth
+  lighting + spec * (reflective $ hit_material hit_rec) where
+    mat = (hit_material hit_rec)
+    spec = case (refr_index mat) of
+      (Just refr) -> transparency scene ray refr (atten mat) hit_rec depth
+      Nothing -> specularReflections scene ray hit_rec depth
     lighting = calculateLighting scene ray hit_rec depth
 
 calculateLighting :: Scene -> Ray3 -> HitRecord -> Int -> Color
@@ -119,6 +122,47 @@ specularReflections scene (Ray3 _ dir) (HitRecord _ _ pt norm) depth =
     multiplier = 2*(dot dir norm)
     refl_dir = dir - (vmap (*multiplier) norm)
     refl_ray = Ray3 pt refl_dir
+    
+-- Determines whether there is total internal reflection in the material, and
+-- if so returns Nothing. Otherwise, it Just returns the vector t (by the notation
+-- of Shirley & Marschner 13.1) which is the ray that has been "bent" by travelling
+-- though a dialetric. d is the vector going into the dialectric, which should be
+-- normalized. norm is the the normal vector coming out of the surface. n is the
+-- refractive-index of the surface from which the ray is *coming*
+refract :: Vector3 -> Vector3 -> Float -> Maybe Vector3
+refract d norm n 
+  | discriminant < 0 = Nothing
+  | otherwise = let term1 = vmap (* (-(sqrt discriminant))) norm
+                    term2 = vmap (* n) ((vmap (* (-d_dot_norm)) norm) + d) in
+                Just $ term1 + term2
+  where d_dot_norm = d `dot` norm
+        discriminant = 1 - (1 - d_dot_norm^2)*n^2
+        
+-- Calculates the contribution of a transparent object to a pixel's color
+transparency :: Scene -> Ray3 -> Float -> Color -> HitRecord -> Int -> Color
+transparency scene ray refr a hit_rec depth =  
+  if d_dot_n < 0 then entering_dialectric else exiting_dialetric where
+    refl_color = specularReflections scene ray hit_rec depth
+    norm = hit_normal hit_rec
+    d = normalize $ dir ray
+    d_dot_n = d `dot` norm
+    
+    calculate_color k c dir = ((cmap (* (1-r)) trans_color) + (cmap (* r) refl_color))*k where 
+      r_0 = (refr-1)^2 / (refr+1)^2
+      r = r_0 + (1-r_0) * (1-c)^5
+      refr_ray = Ray3 (hit_pt hit_rec) dir
+      trans_color = rayTrace refr_ray full_range scene depth
+    
+    entering_dialectric = calculate_color k c dir where
+      (Just dir) = refract d norm (1/refr)
+      k = Color 1 1 1
+      c = (-d_dot_n)
+    
+    exiting_dialetric = (case mdir of (Just dir) -> calculate_color k (dir `dot` norm) dir
+                                      (Nothing) -> k * refl_color)
+      where
+        mdir = refract d (vmap negate norm) refr
+        k = cmap (\x -> exp (x * (hit_time hit_rec))) a
 
 -- Calculates the colors of everything in the pixel grid, to be drawn to the screen
 renderWindow :: Window -> CameraFrame -> ViewPlane -> Scene -> IO (GLUT.PixelData Float)

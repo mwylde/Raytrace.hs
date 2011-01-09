@@ -42,7 +42,7 @@ cubes :: [Surface]
 cubes = (makeCube mat1 cube2) where
 --  cube1 = asd
   cube2 = Cube 0 8 1 8 (-1) 8
-  mat1 = Material greenish_color white_color light_grey_color 100 (-1) 3
+  mat1 = makeOpaqueMat greenish_color white_color light_grey_color 100
     
 dannersMethod :: [Surface]
 dannersMethod = foldl doCube [] indices where
@@ -54,14 +54,14 @@ dannersMethod = foldl doCube [] indices where
              (1, 5, 7), (1, 7, 3),   --right
              (2, 3, 7), (2, 7, 6),   --back
              (0, 4, 5), (0, 5, 1)]   --front
-  material = Material red_color light_grey_color black_color 10 (-1) 3
+  material = makeOpaqueMat red_color light_grey_color black_color 10
   doCube acc (a,b,c) = (makeTriangle (vertices!!a) (vertices!!b) (vertices!!c) material):acc
 
 spheres :: [Surface] 
 spheres = foldl doSphere [] [0, (-3) .. (-40)] where
-  mat1 = Material green_color white_color black_color 100 (-1) 4
-  mat2 = Material purple_color white_color black_color 100 (-1) 3
-  mat3 = Material purple_color white_color light_grey_color 100 (-1) 3
+  mat1 = makeOpaqueMat green_color white_color black_color 100
+  mat2 = makeOpaqueMat purple_color white_color black_color 100
+  mat3 = makeOpaqueMat purple_color white_color light_grey_color 100
   doSphere acc x = let s1 = makeSphere (Point3 x 0 0) 1 mat1
                        s2 = makeSphere (Point3 0 (-x) 0) 0.25 mat2
                        s3 = makeSphere (Point3 0 0 x) 0.25 mat3
@@ -69,18 +69,19 @@ spheres = foldl doSphere [] [0, (-3) .. (-40)] where
        
 purple_spheres :: [Surface]
 purple_spheres = [s1, s2, s3] where
-  mat = Material purple_color white_color black_color 100 (-1) 3
-  mat2 = Material light_grey_color white_color light_grey_color 100 (-1) 3
+  mat = makeOpaqueMat purple_color white_color black_color 100
+  mat2 = makeOpaqueMat light_grey_color white_color light_grey_color 100
+  trans_mat = Material black_color white_color black_color 10 (Just 1.2) light_grey_color
   s1 = makeSphere (Point3 6 6 1.76) 0.75 mat
-  s2 = makeSphere (Point3 5 2 1.76) 0.85 mat
+  s2 = makeSphere (Point3 5 2 1.76) 0.85 trans_mat
   s3 = makeSphere (Point3 4 1 4) 0.3 mat2
 
 plane :: Surface
 plane = makePlane (Point3 0 0 (-1)) (Point3 1 0 (-1)) (Point3 1 1 (-1)) plane_material where
-  plane_material = Material light_grey_color white_color black_color 10 (-1) 4
+  plane_material = makeOpaqueMat light_grey_color white_color black_color 10
   
 surfaces :: [Surface]
---surfaces = [plane, (constructBBT (dannersMethod++purple_spheres++spheres))]
+--surfaces = [plane, (constructBBT (dannersMethod++purple_spheres))]
 surfaces = plane:(dannersMethod++purple_spheres++spheres)
 
 lights :: [Light]
