@@ -76,12 +76,15 @@ closestHit ray hit_range (x:xs) = if (isJust hit_rec) then hit_rec else next_rec
 colorForHit :: Scene -> Ray3 -> Maybe HitRecord -> Int -> Color
 colorForHit _ _ Nothing depth = Color 0 0 0
 colorForHit scene ray (Just hit_rec) depth = 
-  lighting + spec * (reflective $ hit_material hit_rec) where
+  lighting + spec where
     mat = (hit_material hit_rec)
     spec = case (refr_index mat) of
       (Just refr) -> transparency scene ray refr (atten mat) hit_rec depth
-      Nothing -> specularReflections scene ray hit_rec depth
+      Nothing -> (specularReflections scene ray hit_rec depth) * (reflective $ hit_material hit_rec)
     lighting = calculateLighting scene ray hit_rec depth
+
+traceThis :: Show a => a -> a
+traceThis x = traceShow x x
 
 calculateLighting :: Scene -> Ray3 -> HitRecord -> Int -> Color
 calculateLighting (Scene surfaces lights) ray hit_rec depth = foldl doLight (Color 0 0 0) lights where
@@ -132,9 +135,9 @@ specularReflections scene (Ray3 _ dir) (HitRecord _ _ pt norm) depth =
 refract :: Vector3 -> Vector3 -> Float -> Maybe Vector3
 refract d norm n 
   | discriminant < 0 = Nothing
-  | otherwise = let term1 = vmap (* (-(sqrt discriminant))) norm
-                    term2 = vmap (* n) ((vmap (* (-d_dot_norm)) norm) + d) in
-                Just $ term1 + term2
+  | otherwise = let term1 = vmap (* n) (d - (vmap (* d_dot_norm) norm))
+                    term2 = vmap ((*) $ sqrt discriminant) norm in
+                Just $ term1 - term2
   where d_dot_norm = d `dot` norm
         discriminant = 1 - (1 - d_dot_norm^2)*n^2
         
@@ -161,8 +164,8 @@ transparency scene ray refr a hit_rec depth =
     exiting_dialetric = (case mdir of (Just dir) -> calculate_color k (dir `dot` norm) dir
                                       (Nothing) -> k * refl_color)
       where
-        mdir = refract d (vmap negate norm) refr
-        k = cmap (\x -> exp (x * (hit_time hit_rec))) a
+        mdir = refract d (-norm) refr
+        k = cmap (\x -> exp ((-x) * (hit_time hit_rec))) a
 
 -- Calculates the colors of everything in the pixel grid, to be drawn to the screen
 renderWindow :: Window -> CameraFrame -> ViewPlane -> Scene -> IO (GLUT.PixelData Float)

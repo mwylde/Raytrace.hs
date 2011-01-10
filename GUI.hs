@@ -54,7 +54,7 @@ dannersMethod = foldl doCube [] indices where
              (1, 5, 7), (1, 7, 3),   --right
              (2, 3, 7), (2, 7, 6),   --back
              (0, 4, 5), (0, 5, 1)]   --front
-  material = makeOpaqueMat red_color light_grey_color black_color 10
+  material = makeOpaqueMat red_color light_grey_color white_color 1000
   doCube acc (a,b,c) = (makeTriangle (vertices!!a) (vertices!!b) (vertices!!c) material):acc
 
 spheres :: [Surface] 
@@ -70,19 +70,22 @@ spheres = foldl doSphere [] [0, (-3) .. (-40)] where
 purple_spheres :: [Surface]
 purple_spheres = [s1, s2, s3] where
   mat = makeOpaqueMat purple_color white_color black_color 100
-  mat2 = makeOpaqueMat light_grey_color white_color light_grey_color 100
-  trans_mat = Material black_color white_color black_color 10 (Just 1.2) light_grey_color
+  mat2 = makeOpaqueMat black_color white_color white_color 1000000
   s1 = makeSphere (Point3 6 6 1.76) 0.75 mat
-  s2 = makeSphere (Point3 5 2 1.76) 0.85 trans_mat
-  s3 = makeSphere (Point3 4 1 4) 0.3 mat2
+  s2 = makeSphere (Point3 5 2 1.76) 0.85 mat
+  s3 = makeSphere (Point3 2 4 2.01) 1 mat2
+  
+transSphere :: Surface
+transSphere = makeSphere (Point3 4 2 3) 1 trans_mat where
+  trans_mat = Material black_color white_color black_color 100 (Just 2) (Color 1 0.7 1)
 
 plane :: Surface
 plane = makePlane (Point3 0 0 (-1)) (Point3 1 0 (-1)) (Point3 1 1 (-1)) plane_material where
-  plane_material = makeOpaqueMat light_grey_color white_color black_color 10
+  plane_material = makeOpaqueMat light_grey_color white_color black_color 100
   
 surfaces :: [Surface]
---surfaces = [plane, (constructBBT (dannersMethod++purple_spheres))]
-surfaces = plane:(dannersMethod++purple_spheres++spheres)
+surfaces = [plane, transSphere, (constructBBT (dannersMethod++purple_spheres))]
+--surfaces = plane:(dannersMethod++purple_spheres++spheres)
 
 lights :: [Light]
 lights = [Light (Point3 50 2 100) (Color 1 1 1),
