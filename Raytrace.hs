@@ -122,7 +122,7 @@ isShadowed light_ray light_dist (x:xs) =
 specularReflections :: Scene -> Ray3 -> HitRecord -> Int -> Color
 specularReflections scene (Ray3 _ dir) (HitRecord _ _ pt norm) depth = 
   rayTrace refl_ray full_range scene (depth-1) where
-    multiplier = 2*(dot dir norm)
+    multiplier = 2*(dir `dot` norm)
     refl_dir = dir - (vmap (*multiplier) norm)
     refl_ray = Ray3 pt refl_dir
     
@@ -143,7 +143,7 @@ refract d norm n
         
 -- Calculates the contribution of a transparent object to a pixel's color
 transparency :: Scene -> Ray3 -> Float -> Color -> HitRecord -> Int -> Color
-transparency scene ray refr a hit_rec depth =  
+transparency scene ray refr a hit_rec depth = 
   if d_dot_n < 0 then entering_dialectric else exiting_dialetric where
     refl_color = specularReflections scene ray hit_rec depth
     norm = hit_normal hit_rec

@@ -4,13 +4,10 @@ PACKAGES = -package GLUT
 GHC = ghc
 
 all: 
-	$(GHC) --make -O $(DEFS) $(PACKAGES) GUI.hs -o $(BIN)
+	make table
 
-#raytrace:
-#	$(GHC) --make -prof -auto-all $(DEFS) $(PACKAGES) Main.hs -o $(EXE).prof
-
-#debug:
-#	$(GHC) --make -O $(DEFS) $(PACKAGES) -DDEBUG Main.hs -o $(EXE).debug
+table: 
+	$(GHC) --make -O $(DEPS) $(PACKAGES) scenes/table.hs -o table
 
 clean:
 	rm -fr *.o *.hi *.p_hi $(BIN)
