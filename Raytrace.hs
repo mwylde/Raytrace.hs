@@ -135,11 +135,11 @@ specularReflections scene (Ray3 _ dir) (HitRecord _ _ pt norm) depth =
 refract :: Vector3 -> Vector3 -> Float -> Maybe Vector3
 refract d norm n 
   | discriminant < 0 = Nothing
-  | otherwise = let term1 = vmap (* n) (d - (vmap (* d_dot_norm) norm))
-                    term2 = vmap ((*) $ sqrt discriminant) norm in
-                Just $ term1 - term2
+  | otherwise = Just $ term1 - term2
   where d_dot_norm = d `dot` norm
         discriminant = 1 - (1 - d_dot_norm^2)*n^2
+        term1 = vmap (* n) (d - (vmap (* d_dot_norm) norm))
+        term2 = vmap ((*) $ sqrt discriminant) norm
         
 -- Calculates the contribution of a transparent object to a pixel's color
 transparency :: Scene -> Ray3 -> Float -> Color -> HitRecord -> Int -> Color
